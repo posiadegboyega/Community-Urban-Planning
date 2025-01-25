@@ -11,3 +11,7 @@ J
 contracts/project-nft.clar,7/0/708eb628bd135fd5a986e36acd176e4422761639
 Y
 )contracts/government-api-integration.clar,f/c/fcce7fa2ee8c458dcc7bc58e41de5321f6fb4652
+=
+Clarinet.toml,9/d/9d284ad9ceb4c6d6525244c8f2230e5943b9c9b2
+X
+(tests/government-api-integration.test.ts,7/a/7a0b8c3ce85b0950a4060415f5b03fea239ad864

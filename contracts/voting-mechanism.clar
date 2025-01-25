@@ -1,27 +1,52 @@
-;; Voting Mechanism Contract
+;; Government API Integration Contract
 
-(define-map votes { proposal-id: uint, voter: principal } { vote-count: uint })
+(define-map project-feasibility uint {
+    is-feasible: bool,
+    reason: (string-ascii 200)
+})
 
-(define-public (cast-vote (proposal-id uint) (vote-count uint))
-    (let
-        ((current-votes (default-to { vote-count: u0 } (map-get? votes { proposal-id: proposal-id, voter: tx-sender }))))
-        (asserts! (< (get vote-count current-votes) u100) (err u401))
-        (map-set votes { proposal-id: proposal-id, voter: tx-sender } { vote-count: (+ (get vote-count current-votes) vote-count) })
-        (update-proposal-votes proposal-id vote-count)
-        (ok true)
+(define-map project-updates uint (list 10 {
+    update: (string-utf8 500),
+    timestamp: uint
+}))
+
+(define-data-var government-authority principal tx-sender)
+
+(define-public (set-project-feasibility (proposal-id uint) (is-feasible bool) (reason (string-ascii 200)))
+    (begin
+        (asserts! (is-eq tx-sender (var-get government-authority)) (err u403))
+        (ok (map-set project-feasibility proposal-id {
+            is-feasible: is-feasible,
+            reason: reason
+        }))
     )
 )
 
-(define-private (update-proposal-votes (proposal-id uint) (new-votes uint))
+(define-public (add-project-update (proposal-id uint) (update (string-utf8 500)))
     (let
-        ((proposal (unwrap! (contract-call? .project-proposal get-proposal proposal-id) (err u404))))
-        (contract-call? .project-proposal update-proposal-status proposal-id "active")
-        (map-set proposals proposal-id
-            (merge proposal { votes: (+ (get votes proposal) new-votes) }))
+        ((current-updates (default-to (list) (map-get? project-updates proposal-id))))
+        (asserts! (is-eq tx-sender (var-get government-authority)) (err u403))
+        (ok (map-set project-updates proposal-id
+            (unwrap-panic (as-max-len?
+                (append current-updates (tuple (update update) (timestamp block-height)))
+                u10
+            ))
+        ))
     )
 )
 
-(define-read-only (get-votes (proposal-id uint) (voter principal))
-    (default-to { vote-count: u0 } (map-get? votes { proposal-id: proposal-id, voter: voter }))
+(define-read-only (get-project-feasibility (proposal-id uint))
+    (map-get? project-feasibility proposal-id)
+)
+
+(define-read-only (get-project-updates (proposal-id uint))
+    (map-get? project-updates proposal-id)
+)
+
+(define-public (transfer-authority (new-authority principal))
+    (begin
+        (asserts! (is-eq tx-sender (var-get government-authority)) (err u403))
+        (ok (var-set government-authority new-authority))
+    )
 )
 

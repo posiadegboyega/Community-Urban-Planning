@@ -10,11 +10,6 @@ path = 'contracts/fund-allocation.clar'
 clarity_version = 2
 epoch = 2.5
 
-[contracts.government-api-integration]
-path = 'contracts/government-api-integration.clar'
-clarity_version = 2
-epoch = 2.5
-
 [contracts.project-nft]
 path = 'contracts/project-nft.clar'
 clarity_version = 2
